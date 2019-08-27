@@ -33,18 +33,17 @@ class imageDownloader():
         #     print(text)
         # print(brand for brand in brandSoup)
 
-        # EASY WAY OUT
+        # EASY WAY OUT Use brands.csv to upload brands
         # csv = pd.read_csv("brands.csv", encoding='utf-8')
-
         brands = ["Audi", "BMW", "Ford", "Mercedes-Benz", "Opel", "Renault", "Volkswagen", "9ff", "Abarth", "AC", "ACM", "Acura", "Aixam", "Alfa_Romeo", "Alpina", "Alpine", "Amphicar", "Ariel_Motor", "Artega", "Aspid", "Aston_Martin", "Austin", "Autobianchi", "Auverland", "Baic", "Bedford", "Bellier", "Bentley", "Bolloré", "Borgward", "Brilliance", "Bugatti", "Buick", "BYD", "Cadillac", "Caravans-Wohnm", "Casalini", "Caterham", "Changhe", "Chatenet", "Chery", "Chevrolet", "Chrysler", "Citroen", "CityEL", "CMC", "Corvette", "Courb", "Cupra", "Dacia", "Daewoo", "DAF", "Daihatsu", "Daimler", "Dangel", "De_la_Chapelle", "De_Tomaso", "Derways", "DFSK", "Dodge", "Donkervoort", "DR_Motor", "DS_Automobiles", "Dutton", "e.GO", "Estrima", "Ferrari", "Fiat", "FISKER", "Gac_Gonow", "Galloper", "GAZ", "Geely", "GEM", "GEMBALLA", "Genesis", "Gillet", "Giotti_Victoria", "GMC", "Great_Wall", "Grecav", "Haima", "Hamann", "Honda", "HUMMER", "Hurtan", "Hyundai", "Infiniti", "Innocenti", "Iso_Rivolta", "Isuzu", "Iveco", "IZH", "Jaguar", "Jeep", "Karabag", "Kia", "Koenigsegg", "KTM", "Lada", "Lamborghini", "Lancia", "Land_Rover", "LDV", "Lexus", "Lifan", "Ligier", "Lincoln", "Lotus", "Mahindra", "MAN", "Mansory", "Martin_Motors", "Maserati", "Maxus", "Maybach", "Mazda", "McLaren", "Melex", "MG", "Microcar", "Minauto", "MINI", "Mitsubishi", "Mitsuoka", "Morgan", "Moskvich", "MP_Lafer", "MPM_Motors", "Nio", "Nissan", "Oldsmobile", "Oldtimer", "Pagani", "Panther_Westwinds", "Peugeot", "PGO", "Piaggio", "Plymouth", "Pontiac", "Porsche", "Proton", "Puch", "Qoros", "Qvale", "RAM", "Reliant", "Rolls-Royce", "Rover", "Ruf", "Saab", "Santana", "Savel", "SDG", "SEAT", "Shuanghuan", "Skoda", "smart", "SpeedArt", "Spyker", "SsangYong", "StreetScooter", "Subaru", "Suzuki", "TagAZ", "Talbot", "Tasso", "Tata", "Tazzari_EV", "TECHART", "Tesla", "Town_Life", "Toyota", "Trabant", "Trailer-Anhänger", "Triumph", "Trucks-Lkw", "TVR", "UAZ", "Vanderhall", "VAZ", "VEM", "Volvo", "Vortex", "Wallys", "Wartburg", "Westfield", "Wiesmann", "Zastava", "ZAZ", "Zhidou", "Zotye"]
     
-
         for brand in brands:
             print(brand.encode('utf-8'))
-        # print(brand for brand in csv['Brand'])
 
+# Called at the beginning used to iterate through the pages of listings.
     def getNumberOfPagesFor(self, brand, minPrice):
         brandUrl = 'https://www.autoscout24.com/lst/{}?sort=price&desc=0&ustate=N%2CU&size=20&page=1&pricefrom={}&atype=C&'.format(brand,minPrice)
+        print(brandUrl)
         brandPage = urllib2.urlopen(brandUrl)
         numSoup = BeautifulSoup(brandPage, 'html.parser')
         number_of_cars = numSoup.find_all('span', attrs={'class': 'cl-filters-summary-counter'})[0].text
@@ -54,7 +53,6 @@ class imageDownloader():
         return number_of_pages
 
     def getNewMinPrice(self, brand, page, minPrice):
-        
         brandUrl = 'https://www.autoscout24.com/lst/{}?sort=price&desc=0&ustate=N%2CU&size=20&page={}&pricefrom={}&atype=C&'.format(brand, page, minPrice)
         print(brandUrl)
         listingPage = urllib2.urlopen(brandUrl)
@@ -63,7 +61,7 @@ class imageDownloader():
         price = ''.join(x for x in price if x.isdigit()).replace(',','')
         return price
 
-
+# From a page, gets urls of all the car listings for certain brand
     def getListingUrls(self, brand, page, minPrice):
         urls = []
 
@@ -81,6 +79,7 @@ class imageDownloader():
         print('PAGE :', page)
         return urls
 
+# From a given url, function scrapes all images of the car.
     def getPhotoUrls(self, url, brand):
         print(url)
         print(url[-36:])
@@ -106,6 +105,7 @@ class imageDownloader():
                 print('No photo download Source')
         return urls
 
+# Downloads photos from given url. Saves image in Brand folder and in model folder with name of car
     def downloadPhotos(self, url, brand, model):
         if not os.path.exists('images/' + brand.upper()):
             os.mkdir('images/' + brand.upper())
@@ -122,6 +122,7 @@ class imageDownloader():
         except:
             print('There was a problem downloading File')
 
+# Main function that downloads images of a certain make. Takes car make and an optional minimum price
     def downloadImagesFrom(self, brand, minPrice=0):
         while self.getNumberOfPagesFor(brand, minPrice) > 20:
             for page in range(1,self.getNumberOfPagesFor(brand, minPrice)):
@@ -145,9 +146,7 @@ class imageDownloader():
                 for i in range(1,len(photoUrls)):
                     self.downloadPhotos(photoUrls[i], brand=brand, model=photoUrls[0])
 
-
-
-
+# Local check if image is already downloaded
     def listingExists(self,path, pattern):
         for file in os.listdir(path):
             if fnmatch.fnmatch(file, '*' + pattern + '*'):
@@ -155,7 +154,7 @@ class imageDownloader():
         return False
 
 imgdldr = imageDownloader()
-imgdldr.downloadImagesFrom('mercedes', minPrice=0)
-# imgdldr.getNewMinPrice('lamborghini', 20, 0)
+imgdldr.downloadImagesFrom('mercedes-benz', minPrice=0)
+
 
 
